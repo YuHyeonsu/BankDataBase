@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>송금 완료</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            color: #DAA520;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 16px;
+            color: #333;
+            margin: 5px 0;
+        }
+        .info-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        button {
+            background-color: #DAA520;
+            color: white;
+            padding: 10px 20px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #C19A6B;
+        }
+        a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-container">
+        <h1>송금이 완료되었습니다!</h1>
+        <p><strong>송금 계좌 ID:</strong> {{ sender_account_id }}</p>
+        <p><strong>수신 고객 ID:</strong> {{ recipient_customer_id }}</p>
+        <p><strong>수신 계좌 ID:</strong> {{ recipient_account_id }}</p>
+        <p><strong>송금 금액:</strong> {{ amount }} 원</p>
+        <p><strong>남은 잔액:</strong> {{ remaining_balance }} 원</p>
+
+        <!-- 계좌 페이지로 돌아가기 버튼 -->
+        <a href="{{ url_for('accounts', customer_id=sender_customer_id) }}">
+            <button>홈으로 돌아가기</button>
+        </a>
+    </div>
+</body>
+</html>

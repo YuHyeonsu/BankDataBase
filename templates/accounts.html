@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ customer_name }} 계좌</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #555;
+        }
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 80%;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color:  #DAA520;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-top: 30px;
+            gap: 20px; /* 두 버튼 사이 공백 추가 */
+        }
+        .form-box {
+            flex: 1; /* 동일한 너비를 가지도록 설정 */
+            margin: 0 10px; /* 양쪽에 여백 추가 */
+        }
+        .form-container {
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: left;
+        }
+        label, select, input {
+            font-size: 14px;
+            margin: 8px 0;
+            display: block;
+            width: 100%;
+        }
+        button {
+            background-color: #DAA520;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #C19A6B;
+        }
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ customer_name }} 계좌</h1>
+
+    <h2>내 계좌</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>계좌 ID</th>
+                <th>계좌 유형</th>
+                <th>잔액</th>
+                <th>생성 날짜</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+            <tr>
+                <td><a href="{{ url_for('transactions', account_id=account[0]) }}">{{ account[0] }}</a></td>
+                <td>{{ account[1] }}</td>
+                <td>{{ account[2] }} 원</td>
+                <td>{{ account[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- 버튼 컨테이너 -->
+    <div class="button-container">
+        <div class="form-box">
+            <div class="form-container">
+                <h2>새 계좌 등록</h2>
+                <form method="POST">
+                    <label for="account_type">계좌 유형:</label>
+                    <select name="account_type" id="account_type">
+                        <option value="저축 계좌">저축 계좌</option>
+                        <option value="당좌 계좌">당좌 계좌</option>
+                    </select>
+                    <label for="balance">초기 잔액:</label>
+                    <input type="number" name="balance" id="balance" placeholder="초기 잔액 입력" required>
+                    <button type="submit">등록</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="form-box">
+            <div class="form-container">
+                <h2>대출 신청</h2>
+                <form action="/loan_application" method="POST">
+                    <label for="loan_amount">대출 금액:</label>
+                    <input type="number" name="loan_amount" id="loan_amount" placeholder="대출 금액 입력" required>
+                    <label for="loan_term">대출 기간 (개월):</label>
+                    <input type="number" name="loan_term" id="loan_term" placeholder="대출 기간 입력" required>
+                    <button type="submit">대출 신청</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

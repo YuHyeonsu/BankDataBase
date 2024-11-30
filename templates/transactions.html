@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>거래 내역</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+            width: 80%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .button-container {
+            margin-bottom: 20px;
+        }
+        button {
+            background-color:  #DAA520;
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #C19A6B;
+        }
+    </style>
+</head>
+<body>
+    <h1>거래 내역</h1>
+    <h2>계좌 ID: {{ account_id }}</h2>
+    <h3>계좌 유형: {{ account_info[0] }}</h3>
+    <h3>잔액: {{ account_info[1] | round(2) }} 원</h3>
+
+    <!-- 버튼 컨테이너 -->
+    <div class="button-container">
+        <button onclick="location.href='/transfer/{{ account_id }}'">송금하기</button>
+        <button onclick="location.href='/accounts/{{ customer_id }}'">홈으로 돌아가기</button>
+    </div>
+
+    <h3>거래 내역:</h3>
+    {% if transactions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>거래 ID</th>
+                    <th>유형</th>
+                    <th>금액</th>
+                    <th>날짜</th>
+                    <th>설명</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in transactions %}
+                <tr>
+                    <td>{{ t[0] }}</td>
+                    <td>{{ t[1] }}</td>
+                    <td>{{ t[2] }}</td>
+                    <td>{{ t[3] }}</td>
+                    <td>{{ t[4] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>거래 내역이 없습니다.</p>
+    {% endif %}
+</body>
+</html>

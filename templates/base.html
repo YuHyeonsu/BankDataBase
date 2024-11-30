@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>FINBASE</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 100px;
+        }
+        h1 {
+            color: #333;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #DAA520;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #C19A6B;
+        }
+    </style>
+</head>
+<body>
+    <h1>FINBASE</h1>
+    <div class="button-container">
+        <!-- 회원가입하기 버튼 -->
+        <a href="{{ url_for('register') }}">
+            <button>회원가입하기</button>
+        </a>
+        <!-- 로그인하기 버튼 -->
+        <a href="{{ url_for('login') }}">
+            <button>로그인하기</button>
+        </a>
+    </div>
+</body>
+</html>
