@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>대출 신청 완료</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #555;
+            font-size: 18px;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        button {
+            background-color: #DAA520;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #C19A6B;
+        }
+    </style>
+</head>
+<body>
+    <h1>대출 신청 완료</h1>
+    <p>{{ message }}</p>
+    <div class="button-container">
+        <button onclick="location.href='/accounts/{{ customer_id }}'">홈으로 돌아가기</button>
+    </div>
+</body>
+</html>

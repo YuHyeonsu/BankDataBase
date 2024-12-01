@@ -83,21 +83,65 @@ def accounts(customer_id):
     # 고객 이름 가져오기
     cursor = connection.cursor()
     cursor.execute("SELECT Name FROM Customers WHERE CustomerID = :1", [customer_id])
-    customer_name = cursor.fetchone()[0]  # 고객 이름 가져오기
+    customer_name = cursor.fetchone()[0]
     cursor.close()
 
     if request.method == 'POST':
-        account_type = request.form['account_type']
-        balance = request.form['balance']
+        # 새 계좌 등록 처리
+        if 'account_type' in request.form:
+            account_type = request.form['account_type']
+            balance = request.form['balance']
+            cursor = connection.cursor()
+            cursor.execute(
+                "INSERT INTO Accounts (AccountID, CustomerID, AccountType, Balance, CreatedAt) VALUES (Accounts_SEQ.NEXTVAL, :1, :2, :3, SYSDATE)",
+                (customer_id, account_type, balance)
+            )
+            connection.commit()
+            cursor.close()
+            # 계좌 등록 성공 페이지로 이동 (customer_id 포함)
+            return redirect(url_for('registration_success', message="계좌가 성공적으로 등록되었습니다.", customer_id=customer_id))
 
-        # 새로운 계좌 등록
-        cursor = connection.cursor()
-        cursor.execute(
-            "INSERT INTO Accounts (AccountID, CustomerID, AccountType, Balance) VALUES (Accounts_SEQ.NEXTVAL, :1, :2, :3)",
-            (customer_id, account_type, balance)
-        )
-        connection.commit()
-        cursor.close()
+        # 대출 신청 처리
+    elif 'loan_amount' in request.form:
+        loan_amount = request.form['loan_amount']
+        loan_term = request.form['loan_term']
+    
+        try:
+            cursor = connection.cursor()
+
+            # 대출 신청 데이터 삽입
+            cursor.execute(
+                """
+                INSERT INTO Loans (LoanID, CustomerID, LoanAmount, LoanTerm, ApplicationDate)
+                VALUES (Loans_SEQ.NEXTVAL, :1, :2, :3, SYSDATE)
+                """,
+                (customer_id, loan_amount, loan_term)
+            )
+            connection.commit()
+        
+            # 대출 신청 성공 페이지로 이동
+            return redirect(url_for('loan_success', message="대출 신청이 성공적으로 완료되었습니다.", customer_id=customer_id))
+    
+        except cx_Oracle.IntegrityError as e:
+            connection.rollback()  # 데이터베이스 롤백
+            print(f"Database Integrity Error: {e}")
+            return render_template(
+                'accounts.html',
+                customer_id=customer_id,
+                error="대출 신청 처리 중 데이터베이스 무결성 오류가 발생했습니다."
+            )
+
+        except Exception as e:
+            connection.rollback()  # 데이터베이스 롤백
+            print(f"Unexpected Error: {e}")
+            return render_template(
+                'accounts.html',
+                customer_id=customer_id,
+                error="대출 신청 처리 중 예기치 못한 오류가 발생했습니다."
+            )
+
+        finally:
+            cursor.close()  # 커서를 안전하게 닫음
 
     # 고객의 계좌 정보 조회
     cursor = connection.cursor()
@@ -106,6 +150,50 @@ def accounts(customer_id):
     cursor.close()
 
     return render_template('accounts.html', accounts=accounts, customer_name=customer_name, customer_id=customer_id)
+
+@app.route('/success')
+def registration_success():
+    message = request.args.get('message', "작업이 완료되었습니다.")
+    customer_id = request.args.get('customer_id', type=int)  # customer_id 추가
+    return render_template('registration_success.html', message=message, customer_id=customer_id)
+
+@app.route('/loan_success')
+def loan_success():
+    message = request.args.get('message', "작업이 완료되었습니다.")
+    customer_id = request.args.get('customer_id', type=int)  # customer_id 추가
+    return render_template('loan_success.html', message=message, customer_id=customer_id)
+
+@app.route('/card_application/<int:account_id>', methods=['POST'])
+def card_application(account_id):
+    try:
+        cursor = connection.cursor()
+
+        # 계좌 유효성 확인
+        cursor.execute("SELECT COUNT(*) FROM Accounts WHERE AccountID = :1", [account_id])
+        account_exists = cursor.fetchone()[0]
+        if not account_exists:
+            return jsonify({"error": "유효하지 않은 계좌입니다."}), 400
+
+        # 카드 발급 여부 확인
+        cursor.execute("SELECT COUNT(*) FROM Cards WHERE AccountID = :1", [account_id])
+        card_exists = cursor.fetchone()[0]
+        if card_exists:
+            return jsonify({"error": "이미 카드가 발급된 계좌입니다."}), 400
+
+        # 새로운 카드 발급
+        cursor.execute(
+            "INSERT INTO Cards (CardID, CardType, ExpirationDate, AccountID) "
+            "VALUES (Cards_SEQ.NEXTVAL, 'Debit', ADD_MONTHS(SYSDATE, 60), :1)",
+            [account_id]
+        )
+        connection.commit()
+        cursor.close()
+
+        return jsonify({"message": "카드 신청 완료"}), 200
+    except Exception as e:
+        print(f"Error during card application: {e}")
+        return jsonify({"error": f"카드 신청 처리 중 오류 발생: {e}"}), 500
+
 
 @app.route('/transactions/<int:account_id>')
 def transactions(account_id):
@@ -230,53 +318,26 @@ def transfer(account_id):
 
     return render_template('transfer.html', account_id=account_id)
 
-
-# 고객 정보 조회 (READ)
-@app.route('/customers', methods=['GET'])
-def get_customers():
+@app.route('/delete_account/<int:account_id>', methods=['POST'])
+def delete_account(account_id):
     try:
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Customers")  # Customers 테이블에서 데이터 가져오기
-        rows = cursor.fetchall()
-        cursor.close()
-        return jsonify(rows)
-    except cx_Oracle.DatabaseError as e:
-        return jsonify({"error": str(e)}), 500
 
-# 고객 추가 (CREATE)
-@app.route('/customers', methods=['POST'])
-def add_customer():
-    data = request.json
-    cursor = connection.cursor()
-    cursor.execute(
-        "INSERT INTO Customers (CustomerID, Name, Phone, Address, Email) VALUES (Customers_SEQ.NEXTVAL, :1, :2, :3, :4)",
-        (data['name'], data['phone'], data['address'], data['email'])
-    )
-    connection.commit()
-    cursor.close()
-    return jsonify({'message': 'Customer added successfully'}), 201
+        # 계좌가 존재하는지 확인
+        cursor.execute("SELECT COUNT(*) FROM Accounts WHERE AccountID = :1", [account_id])
+        account_exists = cursor.fetchone()[0]
 
-# 고객 삭제 (DELETE)
-@app.route('/customers/<int:customer_id>', methods=['DELETE'])
-def delete_customer(customer_id):
-    cursor = connection.cursor()
-    cursor.execute("DELETE FROM Customers WHERE CustomerID = :1", [customer_id])
-    connection.commit()
-    cursor.close()
-    return jsonify({'message': 'Customer deleted successfully'})
+        if not account_exists:
+            return jsonify({"error": "해당 계좌가 존재하지 않습니다."}), 400
 
-# 고객 수정 (UPDATE)
-@app.route('/customers/<int:customer_id>', methods=['PUT'])
-def update_customer(customer_id):
-    data = request.json
-    cursor = connection.cursor()
-    cursor.execute(
-        "UPDATE Customers SET Name = :1, Phone = :2, Address = :3, Email = :4 WHERE CustomerID = :5",
-        (data['name'], data['phone'], data['address'], data['email'], customer_id)
-    )
-    connection.commit()
-    cursor.close()
-    return jsonify({'message': 'Customer updated successfully'})
+        # 계좌 삭제
+        cursor.execute("DELETE FROM Accounts WHERE AccountID = :1", [account_id])
+        connection.commit()
+
+        return jsonify({"message": "계좌가 성공적으로 삭제되었습니다."}), 200
+    except Exception as e:
+        print(f"Error deleting account: {e}")
+        return jsonify({"error": "계좌 삭제 중 오류가 발생했습니다."}), 500
 
 
 # 서버 실행
